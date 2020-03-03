@@ -55,7 +55,7 @@ extern "C"
 %token  T_EXIT T_ADD  T_SUB  T_MULT  T_DIV
 %token  T_LT T_GT T_LE T_GE T_EQ T_NE T_AND T_OR T_NOT	 
 %token  T_INTCONST T_STRCONST T_T T_NIL T_IDENT T_UNKNOWN
-%type<text> T_IDENT
+%type <text> T_IDENT
 
 /*
  *	Starting point.
@@ -84,6 +84,10 @@ N_EXPR		: N_CONST
                 {
 			printRule("EXPR", "IDENT");
 			bool found = findEntryInAnyScope(string($1));
+			if(!found)
+			{
+				//undefined identifier error called
+			}
 			}
                 | T_LPAREN N_PARENTHESIZED_EXPR T_RPAREN
                 {
@@ -165,6 +169,11 @@ N_FUNCT_NAME		: T_PROGN
 				{
 				printRule("FUNCT_NAME", 
 				          "IDENT");
+				bool found = findEntryInAnyScope(string($1));
+				if(!found)
+				{
+				//undefined identifier error called
+				}
 				}
                      	;
 N_ARITHLOGIC_EXPR	: N_UN_OP N_EXPR
@@ -213,6 +222,7 @@ N_ID_LIST       : /* epsilon */
                 | N_ID_LIST T_IDENT 
 			{
 			printRule("ID_LIST", "ID_LIST IDENT");
+			scopeStack.push();
 			}
 			;
 N_PRINT_EXPR    : T_PRINT N_EXPR
@@ -318,28 +328,28 @@ void printRule(const char *lhs, const char *rhs)
 
 void beginScope() 
 {
-  scopeStack.push(SYMBOL_TABLE( ));
+  scopeStack.push(SYMBOL_TABLE());
   printf("\n___Entering new scope...\n\n");
 }
 
 void endScope() 
 {
-  scopeStack.pop( );
+  scopeStack.pop();
   printf("\n___Exiting scope...\n\n");
 }
 
 bool findEntryInAnyScope(const string theName) 
 {
-  if (scopeStack.empty( )) 
+  if (scopeStack.empty()) 
   	return(false);
-  bool found = scopeStack.top( ).findEntry(theName);
+  bool found = scopeStack.top().findEntry(theName);
   if (found)
   	return(true);
   else 
   {
 	// check in "next higher" scope
-	SYMBOL_TABLE symbolTable = scopeStack.top( );
-	scopeStack.pop( );
+	SYMBOL_TABLE symbolTable = scopeStack.top();
+	scopeStack.pop();
 	found = findEntryInAnyScope(theName);
 	scopeStack.push(symbolTable); // restore the stack
 	return(found);

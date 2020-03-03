@@ -78,7 +78,7 @@ COMMENT           ";".*$
 			printf("TOKEN: EQ        LEXEME: %s\n", yytext);
 			return T_EQ;
 			}
-"/="			{
+"/="		{
 			printf("TOKEN: NE        LEXEME: %s\n", yytext);
 			return T_NE;
 			}
