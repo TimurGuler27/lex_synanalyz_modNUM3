@@ -15,10 +15,18 @@
 %{
 #include <stdio.h>
 #include <iostream>
+#include <stack>
+#include "SymbolTable.h"
 using namespace std;
+
+//new variable
+stack<SYMBOL_TABLE> scopeStack;
 
 int lineNum = 1; 
 
+void beginScope();
+void endScope();
+bool findEntryInAnyScope(const string theName);
 void printRule(const char *, const char *);
 void prepareToTerminate();
 void bail();
@@ -37,6 +45,7 @@ extern "C"
 }
 
 %}
+%union {char* text;};
 
 /*
  *	Token declarations
@@ -46,6 +55,7 @@ extern "C"
 %token  T_EXIT T_ADD  T_SUB  T_MULT  T_DIV
 %token  T_LT T_GT T_LE T_GE T_EQ T_NE T_AND T_OR T_NOT	 
 %token  T_INTCONST T_STRCONST T_T T_NIL T_IDENT T_UNKNOWN
+%type<text> T_IDENT
 
 /*
  *	Starting point.
@@ -73,6 +83,7 @@ N_EXPR		: N_CONST
                 | T_IDENT
                 {
 			printRule("EXPR", "IDENT");
+			bool found = findEntryInAnyScope(string($1));
 			}
                 | T_LPAREN N_PARENTHESIZED_EXPR T_RPAREN
                 {
@@ -109,11 +120,13 @@ N_PARENTHESIZED_EXPR	: N_ARITHLOGIC_EXPR
 				{
 				printRule("PARENTHESIZED_EXPR", 
                                 "LET_EXPR");
+				endScope();
 				}
                       | N_LAMBDA_EXPR 
 				{
 				printRule("PARENTHESIZED_EXPR", 
 				          "LAMBDA_EXPR");
+				endScope();
 				}
                       | N_PRINT_EXPR 
 				{
@@ -301,6 +314,36 @@ void printRule(const char *lhs, const char *rhs)
 {
   printf("%s -> %s\n", lhs, rhs);
   return;
+}
+
+void beginScope() 
+{
+  scopeStack.push(SYMBOL_TABLE( ));
+  printf("\n___Entering new scope...\n\n");
+}
+
+void endScope() 
+{
+  scopeStack.pop( );
+  printf("\n___Exiting scope...\n\n");
+}
+
+bool findEntryInAnyScope(const string theName) 
+{
+  if (scopeStack.empty( )) 
+  	return(false);
+  bool found = scopeStack.top( ).findEntry(theName);
+  if (found)
+  	return(true);
+  else 
+  {
+	// check in "next higher" scope
+	SYMBOL_TABLE symbolTable = scopeStack.top( );
+	scopeStack.pop( );
+	found = findEntryInAnyScope(theName);
+	scopeStack.push(symbolTable); // restore the stack
+	return(found);
+  }
 }
 
 void prepareToTerminate()

@@ -88,6 +88,7 @@ COMMENT           ";".*$
 			}
 "let*"		{
 			printf("TOKEN: LETSTAR   LEXEME: %s\n", yytext);
+			beginScope();
 			return T_LETSTAR;
 			}
 "if"			{
@@ -96,6 +97,7 @@ COMMENT           ";".*$
 			}
 "lambda"		{
 			printf("TOKEN: LAMBDA    LEXEME: %s\n", yytext);
+			beginScope();
 			return T_LAMBDA;
 			}
 "print"		{
@@ -139,6 +141,7 @@ COMMENT           ";".*$
 			return T_STRCONST;
 			}
 {IDENT}		{
+			yylval.text = strdup(yytext);
 			printf("TOKEN: IDENT     LEXEME: %s\n", yytext);
 			return T_IDENT;
 			}
