@@ -210,7 +210,7 @@ N_ID_EXPR_LIST  : /* epsilon */
 
 			string lex = string($3);
 			bool push = scopeStack.top().addEntry(SYMBOL_TABLE_ENTRY(lex, UNDEFINED));
-			printf("___Adding %s to symbol table", $3);
+			printf("___Adding %s to symbol table \n", $3);
 			if(!push)
 			{
 				yyerror("Multiply defined identifier");
@@ -233,7 +233,7 @@ N_ID_LIST       : /* epsilon */
 			printRule("ID_LIST", "ID_LIST IDENT");
 			string lex = string($2);
 			bool push = scopeStack.top().addEntry(SYMBOL_TABLE_ENTRY(lex, UNDEFINED));
-			printf("___Adding %s to symbol table", $2);
+			printf("___Adding %s to symbol table \n", $2);
 			if(!push)
 			{
 				yyerror("Multiply defined identifier");
