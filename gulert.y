@@ -86,7 +86,7 @@ N_EXPR		: N_CONST
 			bool found = findEntryInAnyScope(string($1));
 			if(!found)
 			{
-				//undefined identifier error called
+				yyerror("Undefined identifier");
 			}
 			}
                 | T_LPAREN N_PARENTHESIZED_EXPR T_RPAREN
@@ -124,7 +124,6 @@ N_PARENTHESIZED_EXPR	: N_ARITHLOGIC_EXPR
 				{
 				printRule("PARENTHESIZED_EXPR", 
                                 "LET_EXPR");
-				endScope();
 				}
                       | N_LAMBDA_EXPR 
 				{
@@ -172,7 +171,7 @@ N_FUNCT_NAME		: T_PROGN
 				bool found = findEntryInAnyScope(string($1));
 				if(!found)
 				{
-				//undefined identifier error called
+				yyerror("Undefined identifier");
 				}
 				}
                      	;
@@ -197,6 +196,7 @@ N_LET_EXPR      : T_LETSTAR T_LPAREN N_ID_EXPR_LIST T_RPAREN
 			{
 			printRule("LET_EXPR", 
 				    "let* ( ID_EXPR_LIST ) EXPR");
+			endScope();
 			}
 			;
 N_ID_EXPR_LIST  : /* epsilon */
@@ -207,6 +207,15 @@ N_ID_EXPR_LIST  : /* epsilon */
 			{
 			printRule("ID_EXPR_LIST", 
                           "ID_EXPR_LIST ( IDENT EXPR )");
+
+			string lex = string($3);
+			bool push = scopeStack.top().addEntry(SYMBOL_TABLE_ENTRY(lex, UNDEFINED));
+			printf("___Adding %s to symbol table", $3);
+			if(!push)
+			{
+				yyerror("Multiply defined identifier");
+			}
+
 			}
 			;
 N_LAMBDA_EXPR   : T_LAMBDA T_LPAREN N_ID_LIST T_RPAREN N_EXPR
@@ -222,7 +231,13 @@ N_ID_LIST       : /* epsilon */
                 | N_ID_LIST T_IDENT 
 			{
 			printRule("ID_LIST", "ID_LIST IDENT");
-			scopeStack.push();
+			string lex = string($2);
+			bool push = scopeStack.top().addEntry(SYMBOL_TABLE_ENTRY(lex, UNDEFINED));
+			printf("___Adding %s to symbol table", $2);
+			if(!push)
+			{
+				yyerror("Multiply defined identifier");
+			}
 			}
 			;
 N_PRINT_EXPR    : T_PRINT N_EXPR
@@ -358,7 +373,7 @@ bool findEntryInAnyScope(const string theName)
 
 void prepareToTerminate()
 {
-  cout << endl << "Bye!" << endl;
+  cout << endl << "Bye! \n" << endl;
 }
 
 void bail()
